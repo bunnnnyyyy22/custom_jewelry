@@ -400,6 +400,15 @@
                 closeModal(registerOverlay);
             }
         });
+        // ======== 模擬付款成功 ========
+        const PAID_KEY = "mock_paid";
+
+        document.getElementById("mockPayBtn")?.addEventListener("click", () => {
+            localStorage.setItem(PAID_KEY, "1");
+            alert("✅ 模擬付款成功！接下來可下載 PNG");
+            // 你要回到哪一頁就改這裡（我先導回商品選擇/或你要的頁）
+            window.location.href = "shop.html";
+        });
     </script>
 </body>
 
