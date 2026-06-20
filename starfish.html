@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>海星 PNG 分層換色</title>
+
+    <style>
+        :root {
+            --e-global-color-primary: #834300;
+            --e-global-color-secondary: #F9F5F0;
+            --e-global-color-text: #AC7032;
+            --e-global-color-accent: #F0CA74;
+        }
+
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: var(--e-global-color-secondary);
+            color: var(--e-global-color-text);
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 900px;
+            padding: 36px 16px;
+            text-align: center;
+        }
+
+        h3 {
+            margin: 0 0 18px 0;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--e-global-color-text);
+        }
+
+        .row {
+            display: grid;
+            justify-content: center;
+            align-items: center;
+            grid-template-columns: repeat(2, 120px 52px);
+            column-gap: 14px;
+            row-gap: 12px;
+            margin: 12px 0;
+        }
+
+        label {
+            width: auto;
+            text-align: right;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        input[type="color"] {
+            width: 52px;
+            height: 42px;
+            padding: 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+        }
+
+        @media (max-width: 520px) {
+            .row {
+                grid-template-columns: 120px 52px;
+            }
+        }
+
+        #previewWrap {
+            width: 520px;
+            max-width: 100%;
+            margin: 18px auto 0 auto;
+        }
+
+        #preview {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .btn-area {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 16px;
+            background: var(--e-global-color-accent);
+            color: var(--e-global-color-primary);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+            transition: transform 0.05s ease;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--e-global-color-text);
+            border: 1px solid var(--e-global-color-primary);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(172, 112, 50, .08);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h3>客製化上色（PNG / Canvas）- 海星</h3>
+
+        <div class="row">
+            <label>金屬</label>
+            <input type="color" id="metalColor" value="#EBB14E">
+
+            <label>刺繡</label>
+            <input type="color" id="embroideryColor" value="#1E7FB6">
+
+            <label>米珠</label>
+            <input type="color" id="beadsColor" value="#8CCBE7">
+        </div>
+
+        <div id="previewWrap">
+            <canvas id="preview"></canvas>
+        </div>
+
+        <div class="btn-area">
+            <button id="backBtn" type="button" class="btn-secondary">← 返回商品選擇</button>
+            <button id="downloadBtn" type="button">下載 PNG</button>
+        </div>
+    </div>
+
+    <script>
+        // ===== 三層 PNG（依你提供的對應）=====
+        const LAYER_METAL_URL = "./assets/273505.png";     // 金屬層
+        const LAYER_EMB_URL = "./assets/273506.png";       // 刺繡層
+        const LAYER_BEADS_URL = "./assets/273507.png";     // 米珠層
+
+        // 如果你希望金屬保持原色不變，把這個改成 false
+        const CAN_TINT_METAL = true;
+
+        // ===== 免費體驗 / 登入狀態判斷（照你原本邏輯）=====
+        const LS_SESSION_KEY = "demo_session_v1";
+        const urlParams = new URLSearchParams(window.location.search);
+        const pageMode = urlParams.get("mode");
+        const isFreeMode = pageMode === "free";
+
+        function isLoggedIn() { return !!localStorage.getItem(LS_SESSION_KEY); }
+
+        function hexToRgb(hex) {
+            const h = hex.replace('#', '').trim();
+            const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+            const n = parseInt(full, 16);
+            return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        }
+
+        /**
+         * 亮度比例染色（保留立體明暗）
+         * 前提：你的 PNG 背景是透明 alpha（不要是黑底像素）
+         */
+        function tintWithLuminance(img, targetHex) {
+            const { r: tr, g: tg, b: tb } = hexToRgb(targetHex);
+
+            const w = img.naturalWidth, h = img.naturalHeight;
+            const off = document.createElement('canvas');
+            off.width = w;
+            off.height = h;
+            const octx = off.getContext('2d', { willReadFrequently: true });
+
+            octx.clearRect(0, 0, w, h);
+            octx.drawImage(img, 0, 0);
+
+            const imageData = octx.getImageData(0, 0, w, h);
+            const data = imageData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const a = data[i + 3];
+                if (a === 0) continue;
+
+                const r = data[i], g = data[i + 1], b = data[i + 2];
+                const luminance = 0.299 * r + 0.587 * g + 0.114 * b; // 0~255
+                const k = luminance / 255;
+
+                data[i] = Math.round(tr * k);
+                data[i + 1] = Math.round(tg * k);
+                data[i + 2] = Math.round(tb * k);
+            }
+
+            octx.putImageData(imageData, 0, 0);
+            return off;
+        }
+
+        // ===== 載入三層 =====
+        const canvas = document.getElementById("preview");
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+        const metalColorEl = document.getElementById("metalColor");
+        const embroideryColorEl = document.getElementById("embroideryColor");
+        const beadsColorEl = document.getElementById("beadsColor");
+
+        const imgMetal = new Image();
+        const imgEmb = new Image();
+        const imgBeads = new Image();
+
+        let ready = 0;
+        function onLoaded() {
+            ready++;
+            if (ready === 3) initCanvasAndRender();
+        }
+
+        imgMetal.onload = onLoaded;
+        imgEmb.onload = onLoaded;
+        imgBeads.onload = onLoaded;
+
+        imgMetal.src = LAYER_METAL_URL;
+        imgEmb.src = LAYER_EMB_URL;
+        imgBeads.src = LAYER_BEADS_URL;
+
+        function initCanvasAndRender() {
+            const baseW = imgMetal.naturalWidth || imgEmb.naturalWidth || imgBeads.naturalWidth;
+            const baseH = imgMetal.naturalHeight || imgEmb.naturalHeight || imgBeads.naturalHeight;
+
+            const targetW = 520;
+            canvas.width = targetW;
+            canvas.height = Math.round(targetW * (baseH / baseW));
+
+            render();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const metalHex = metalColorEl.value;
+            const embHex = embroideryColorEl.value;
+            const beadsHex = beadsColorEl.value;
+
+            // 1) 金屬
+            if (CAN_TINT_METAL) {
+                const metalTinted = tintWithLuminance(imgMetal, metalHex);
+                ctx.drawImage(metalTinted, 0, 0, canvas.width, canvas.height);
+            } else {
+                ctx.drawImage(imgMetal, 0, 0, canvas.width, canvas.height);
+            }
+
+            // 2) 刺繡
+            const embTinted = tintWithLuminance(imgEmb, embHex);
+            ctx.drawImage(embTinted, 0, 0, canvas.width, canvas.height);
+
+            // 3) 米珠
+            const beadsTinted = tintWithLuminance(imgBeads, beadsHex);
+            ctx.drawImage(beadsTinted, 0, 0, canvas.width, canvas.height);
+        }
+
+        // ===== 色票事件 =====
+        [metalColorEl, embroideryColorEl, beadsColorEl].forEach(el => {
+            el.addEventListener("input", render);
+        });
+
+        // ===== 下載 PNG =====
+        function downloadCurrentCanvasAsPNG({ bg = "#ffffff" } = {}) {
+            const out = document.createElement("canvas");
+            out.width = canvas.width;
+            out.height = canvas.height;
+            const octx = out.getContext("2d");
+
+            // 背景（如果你要透明PNG就把 bg 設成 null 或留空並改下面邏輯）
+            if (bg !== null && bg !== undefined) {
+                octx.fillStyle = bg;
+                octx.fillRect(0, 0, out.width, out.height);
+            }
+
+            octx.drawImage(canvas, 0, 0);
+            const a = document.createElement("a");
+            a.download = "customized_starfish.png";
+            a.href = out.toDataURL("image/png");
+            a.click();
+        }
+
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            if (isFreeMode) {
+                alert("免費體驗僅供預覽，請登入後再下載 PNG！");
+                return;
+            }
+            if (!isLoggedIn()) {
+                alert("請先登入後再下載 PNG！");
+                return;
+            }
+            downloadCurrentCanvasAsPNG({ bg: "#ffffff" });
+        });
+
+        document.getElementById("backBtn").addEventListener("click", () => {
+            if (isFreeMode) {
+                alert("免費體驗僅開放預覽，請登入後再選擇其他商品！");
+                return;
+            }
+            window.location.href = "./shop.html";
+        });
+    </script>
+</body>
+
+</html>
