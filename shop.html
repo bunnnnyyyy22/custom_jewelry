@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>客製化商品選擇</title>
+
+    <style>
+        :root {
+            --e-global-color-primary: #834300;
+            --e-global-color-secondary: #F9F5F0;
+            --e-global-color-text: #AC7032;
+            --e-global-color-accent: #F0CA74;
+        }
+
+        body {
+            margin: 0;
+            background: var(--e-global-color-secondary);
+            color: var(--e-global-color-text);
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            min-height: 100vh;
+
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 1000px;
+            padding: 48px 16px;
+            text-align: center;
+        }
+
+        h1 {
+            margin: 0 0 28px;
+            font-size: 34px;
+            font-weight: 1000;
+            color: var(--e-global-color-text);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 900px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, .55);
+            border: 1px solid rgba(172, 112, 50, .25);
+            border-radius: 18px;
+            padding: 18px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .icon {
+            width: 200px;
+            max-width: 70%;
+            aspect-ratio: 1 / 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .icon svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .name {
+            font-weight: 1000;
+            font-size: 22px;
+            color: var(--e-global-color-text);
+            margin-top: 2px;
+        }
+
+        .desc {
+            margin: 0;
+            color: rgba(172, 112, 50, .95);
+            line-height: 1.7;
+            font-size: 14px;
+            max-width: 340px;
+        }
+
+        .go-btn {
+            margin-top: auto;
+            border: none;
+            cursor: pointer;
+            padding: 12px 18px;
+            border-radius: 14px;
+            font-weight: 1000;
+            font-size: 16px;
+            background: var(--e-global-color-accent);
+            color: var(--e-global-color-primary);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, .12);
+            transition: transform .05s ease;
+        }
+
+        .go-btn:active {
+            transform: scale(.99);
+        }
+
+        /* ===== 底部置中：返回首頁 ===== */
+        .footer-actions {
+            margin-top: 36px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-home {
+            border: none;
+            cursor: pointer;
+            padding: 12px 22px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 16px;
+            background: transparent;
+            color: var(--e-global-color-text);
+            border: 1px solid rgba(172, 112, 50, .4);
+            box-shadow: none;
+            transition: transform .05s ease, background .15s ease;
+        }
+
+        .btn-home:hover {
+            background: rgba(172, 112, 50, .08);
+        }
+
+        .btn-home:active {
+            transform: scale(.99);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>選擇你要客製化的商品</h1>
+
+        <div class="grid">
+            <!-- 葉子 -->
+            <div class="card">
+                <div class="icon" aria-hidden="true">
+                    <!-- 你可以把這個 SVG 換成你自己的 leaf 圖示檔（簡化示範） -->
+                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M50 10 C70 25 90 45 85 65 C80 85 55 95 35 85 C15 75 10 50 20 35 C30 20 40 15 50 10Z"
+                            fill="rgba(240,202,116,.9)" stroke="rgba(131,67,0,.9)" stroke-width="2" />
+                    </svg> -->
+                    <img src="./assets/leaf.svg" alt="" />
+                </div>
+                <div class="name">葉子</div>
+                <p class="desc">金屬 / 米珠 / 刺繡 / 毛氈可自由調色。</p>
+                <button class="go-btn" type="button" onclick="location.href='./leaf.html'">開始客製化</button>
+            </div>
+
+            <!-- 酪梨 -->
+            <div class="card">
+                <div class="icon" aria-hidden="true">
+                    <!-- 同樣：可替換成你自己的 avocado 圖示 SVG -->
+                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M35 45 C25 20 40 12 50 12 C65 12 75 25 70 45
+                     C80 60 75 85 50 88 C25 85 20 60 35 45Z" fill="rgba(140,188,76,.95)" stroke="rgba(131,67,0,.9)"
+                            stroke-width="2" />
+                        <circle cx="57" cy="50" r="7" fill="rgba(240,202,116,.9)" />
+                    </svg> -->
+                    <img src="./assets/avocado.svg" alt="" />
+                </div>
+                <div class="name">酪梨</div>
+                <p class="desc">酪梨本體多個部位可自由調色。</p>
+                <button class="go-btn" type="button" onclick="location.href='./avocado.html'">開始客製化</button>
+            </div>
+
+            <!-- 海星 -->
+            <div class="card">
+                <div class="icon" aria-hidden="true">
+                    <!-- 這裡換成你自己的海星圖示 SVG -->
+                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M50 10 L58 28 L75 22 L66 40 L86 45 L66 50 L75 78 L58 72 L50 90 L42 72 L25 78 L34 50 L14 45 L34 40 L25 22 L42 28 Z"
+                            fill="rgba(240,202,116,.9)" stroke="rgba(131,67,0,.9)" stroke-width="2" />
+                    </svg>
+                </div>
+                <div class="name">海星</div>
+                <p class="desc">（請把這句改成你海星可客製的項目描述）</p>
+                <button class="go-btn" type="button" onclick="location.href='./starfish.html'">開始客製化</button>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn-home" type="button" onclick="location.href='./hero.html'">← 返回首頁</button>
+        </div>
+    </div>
+</body>
+
+</html>

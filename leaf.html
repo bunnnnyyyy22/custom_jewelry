@@ -1,0 +1,373 @@
+<!doctype html>
+<html lang="zh-Hant">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>葉子 SVG 圖層換色</title>
+
+    <style>
+        /* ===== 你的配色 ===== */
+        :root {
+            --e-global-color-primary: #834300;
+            --e-global-color-secondary: #F9F5F0;
+            --e-global-color-text: #AC7032;
+            --e-global-color-accent: #F0CA74;
+        }
+
+        /* ===== 全頁 ===== */
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            background: var(--e-global-color-secondary);
+            color: var(--e-global-color-text);
+
+            /* 讓所有元素整體置中（垂直與水平） */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        .wrap {
+            width: 100%;
+            max-width: 900px;
+            padding: 36px 16px;
+            text-align: center;
+            /* 文字置中 */
+        }
+
+        h3 {
+            margin: 0 0 18px 0;
+            font-size: 24px;
+            font-weight: 900;
+            color: var(--e-global-color-text);
+        }
+
+        /* ===== 每列控制：整列置中 ===== */
+        .row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+
+            /* 置中 */
+            justify-content: center;
+
+            margin: 12px 0;
+        }
+
+        label {
+            width: 90px;
+            text-align: right;
+            /* label 文字自己右對齊，但整列仍置中 */
+            font-weight: 800;
+        }
+
+        input[type="color"] {
+            width: 52px;
+            height: 42px;
+            padding: 0;
+            border: none;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.15);
+            cursor: pointer;
+        }
+
+        /* ===== SVG 預覽：把 SVG 本身置中 ===== */
+        #preview {
+            width: 520px;
+            max-width: 100%;
+            margin: 18px auto 0 auto;
+            /* preview 容器置中 */
+        }
+
+        /* 這行確保 preview 裡的 svg 元素也置中 */
+        #preview svg {
+            display: block;
+            margin: 0 auto;
+            width: 100%;
+            height: auto;
+        }
+
+        /* ===== 按鈕區置中 ===== */
+        .btn-area {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            border: none;
+            cursor: pointer;
+            padding: 12px 20px;
+            border-radius: 14px;
+            font-weight: 900;
+            font-size: 16px;
+            background: var(--e-global-color-accent);
+            color: var(--e-global-color-primary);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
+            transition: transform 0.05s ease;
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        /* 次要按鈕（返回商品選擇）樣式 */
+        .btn-secondary {
+            background: transparent;
+            color: var(--e-global-color-text);
+            border: 1px solid var(--e-global-color-primary);
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(172, 112, 50, .08);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h3>客製化上色（SVG）- 葉子</h3>
+
+        <div class="row">
+            <label>金屬</label>
+            <input type="color" id="metalColor" value="#ebc159">
+
+            <label>米珠</label>
+            <input type="color" id="beadsColor" value="#ebc159">
+
+            <label>刺繡</label>
+            <input type="color" id="embroideryColor" value="#f2c19b">
+
+            <label>毛氈</label>
+            <input type="color" id="feltColor" value="#f4ead3">
+        </div>
+
+        <div id="preview"></div>
+
+        <div class="btn-area">
+            <button id="backBtn" type="button" class="btn-secondary">← 返回商品選擇</button>
+            <button id="downloadBtn" type="button">下載 PNG</button>
+        </div>
+
+        <script>
+            // 這裡換成你的 SVG 檔案路徑
+            const SVG_URL = "./assets/leaf.svg";
+
+            // 你要控制的 layer id（照你截圖）
+            const LAYERS = {
+                metal: "metal-part",
+                beads: "beads-border",
+                embroidery: "embroidery-main",
+                felt: "felt-border",
+            };
+
+            // ===== 免費體驗 / 登入狀態判斷（整頁共用，只算一次） =====
+            const LS_SESSION_KEY = "demo_session_v1";
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const pageMode = urlParams.get("mode"); // 來自 hero：free / 其它
+            const isFreeMode = pageMode === "free";
+
+            function isLoggedIn() {
+                return !!localStorage.getItem(LS_SESSION_KEY);
+            }
+
+            function hexToRgb(hex) {
+                const h = hex.replace('#', '').trim();
+                const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
+                const n = parseInt(full, 16);
+                return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+            }
+
+            function rgbToHsl(r, g, b) {
+                r /= 255; g /= 255; b /= 255;
+                const max = Math.max(r, g, b), min = Math.min(r, g, b);
+                let h = 0, s = 0;
+                const l = (max + min) / 2;
+                const d = max - min;
+
+                if (d !== 0) {
+                    s = d / (1 - Math.abs(2 * l - 1));
+                    switch (max) {
+                        case r: h = ((g - b) / d) % 6; break;
+                        case g: h = (b - r) / d + 2; break;
+                        case b: h = (r - g) / d + 4; break;
+                    }
+                    h *= 60;
+                    if (h < 0) h += 360;
+                }
+                return { h, s, l };
+            }
+
+            function getGroupBaseColor(groupEl) {
+                // 優先抓 fill，其次抓 stroke
+                const elFill = groupEl.querySelector('[fill]:not([fill="none"])');
+                if (elFill) return elFill.getAttribute('fill');
+
+                const elStroke = groupEl.querySelector('[stroke]:not([stroke="none"])');
+                if (elStroke) return elStroke.getAttribute('stroke');
+
+                return null;
+            }
+
+            function applyHueTintToGroup(previewRoot, groupId, targetHex) {
+                const group = previewRoot.querySelector(`#${CSS.escape(groupId)}`);
+                if (!group) return;
+
+                const base = getGroupBaseColor(group);
+                if (!base) return;
+
+                // 若 base 不是 hex（例如 rgb(...) / named color），你需要再擴充解析
+                if (!base.startsWith('#')) {
+                    console.warn('Base color is not hex:', base);
+                    return;
+                }
+
+                const baseHsl = rgbToHsl(...Object.values(hexToRgb(base)));
+                const targetHsl = rgbToHsl(...Object.values(hexToRgb(targetHex)));
+
+                // 讓色相旋轉方向取最短路徑，避免旋轉太大
+                let delta = targetHsl.h - baseHsl.h;
+                delta = ((delta + 540) % 360) - 180;
+
+                // 飽和度比值（避免 baseS=0）
+                const satFactor = baseHsl.s > 0 ? (targetHsl.s / baseHsl.s) : 1;
+
+                // 這裡是「套 filter」，保留紋理/立體感
+                group.style.filter = `hue-rotate(${delta}deg) saturate(${satFactor})`;
+            }
+
+            async function loadSVG() {
+                const res = await fetch(SVG_URL);
+                const svgText = await res.text();
+
+                const preview = document.getElementById("preview");
+                preview.innerHTML = svgText;
+
+                // 初次套色
+                applyColors();
+            }
+
+            function applyColors() {
+                const preview = document.getElementById("preview");
+
+                applyHueTintToGroup(preview, LAYERS.metal, document.getElementById("metalColor").value);
+                applyHueTintToGroup(preview, LAYERS.beads, document.getElementById("beadsColor").value);
+                applyHueTintToGroup(preview, LAYERS.embroidery, document.getElementById("embroideryColor").value);
+                applyHueTintToGroup(preview, LAYERS.felt, document.getElementById("feltColor").value);
+            }
+
+            ["metalColor", "beadsColor", "embroideryColor", "feltColor"].forEach(id => {
+                document.getElementById(id).addEventListener("input", applyColors);
+            });
+
+            loadSVG();
+
+            function downloadCurrentSVGAsPNG({ scale = 2, bg = "#ffffff" } = {}) {
+                const preview = document.getElementById("preview");
+                const svgEl = preview.querySelector("svg");
+                if (!svgEl) {
+                    alert("找不到 SVG，請先載入 SVG。");
+                    return;
+                }
+
+                // 先算出完整範圍（優先 viewBox）
+                let vb = svgEl.getAttribute("viewBox");
+                let x = 0, y = 0, w = 0, h = 0;
+
+                if (vb) {
+                    const parts = vb.trim().split(/\s+/).map(Number);
+                    [x, y, w, h] = parts;
+                } else {
+                    const bbox = svgEl.getBBox();
+                    x = bbox.x; y = bbox.y; w = bbox.width; h = bbox.height;
+                }
+
+                // 序列化時把 viewBox + width/height 寫死，確保渲染完整
+                const clone = svgEl.cloneNode(true);
+                clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+                clone.setAttribute("viewBox", `${x} ${y} ${w} ${h}`);
+                clone.setAttribute("width", w);
+                clone.setAttribute("height", h);
+
+                let source = new XMLSerializer().serializeToString(clone);
+
+                // 額外保險：確保有 xmlns
+                if (!source.match(/^<svg[^>]+xmlns=/)) {
+                    source = source.replace(
+                        /^<svg/,
+                        '<svg xmlns="http://www.w3.org/2000/svg"'
+                    );
+                }
+
+                const blob = new Blob([source], { type: "image/svg+xml;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement("canvas");
+                    canvas.width = Math.max(1, Math.round(w * scale));
+                    canvas.height = Math.max(1, Math.round(h * scale));
+
+                    const ctx = canvas.getContext("2d");
+
+                    // 背景色
+                    if (bg) {
+                        ctx.fillStyle = bg;
+                        ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    }
+
+                    // 將圖片畫到整個畫布
+                    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+                    ctx.drawImage(img, 0, 0);
+
+                    URL.revokeObjectURL(url);
+
+                    const a = document.createElement("a");
+                    a.download = "customized_leaf.png";
+                    a.href = canvas.toDataURL("image/png");
+                    a.click();
+                };
+
+                img.onerror = (e) => {
+                    URL.revokeObjectURL(url);
+                    console.error(e);
+                    alert("匯出 PNG 失敗（SVG 轉圖片失敗）。請看 Console。");
+                };
+
+                img.src = url;
+            }
+
+            document.getElementById("downloadBtn").addEventListener("click", () => {
+                if (isFreeMode) {
+                    alert("免費體驗僅供預覽，請登入後再下載 PNG！");
+                    return;
+                }
+
+                if (!isLoggedIn()) {
+                    alert("請先登入後再下載 PNG！");
+                    return;
+                }
+
+                downloadCurrentSVGAsPNG({ scale: 2, bg: "#ffffff" });
+            });
+
+            // ===== 返回商品選擇按鈕：免費體驗用戶擋掉 =====
+            document.getElementById("backBtn").addEventListener("click", () => {
+                if (isFreeMode) {
+                    alert("免費體驗僅開放葉子預覽，請登入後再選擇其他商品！");
+                    return;
+                }
+
+                window.location.href = "./shop.html";
+            });
+        </script>
+    </div>
+</body>
+
+</html>
