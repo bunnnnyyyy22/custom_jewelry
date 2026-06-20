@@ -66,6 +66,12 @@
             text-decoration: none;
         }
 
+        .starfish-img {
+            height: auto;
+            max-width: 100%;
+            display: block;
+        }
+
         .icon {
             width: 200px;
             max-width: 70%;
@@ -186,14 +192,16 @@
             <div class="card">
                 <div class="icon" aria-hidden="true">
                     <!-- 這裡換成你自己的海星圖示 SVG -->
-                    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
                             d="M50 10 L58 28 L75 22 L66 40 L86 45 L66 50 L75 78 L58 72 L50 90 L42 72 L25 78 L34 50 L14 45 L34 40 L25 22 L42 28 Z"
                             fill="rgba(240,202,116,.9)" stroke="rgba(131,67,0,.9)" stroke-width="2" />
-                    </svg>
+                    </svg> -->
+                    <!-- <img src="./assets/starfish.svg" alt="" /> -->
+                    <img class="starfish-img" src="./assets/starfish.png" alt="" />
                 </div>
                 <div class="name">海星</div>
-                <p class="desc">（請把這句改成你海星可客製的項目描述）</p>
+                <p class="desc">金屬 / 米珠 / 刺繡可自由調色。</p>
                 <button class="go-btn" type="button" onclick="location.href='./starfish.html'">開始客製化</button>
             </div>
         </div>
