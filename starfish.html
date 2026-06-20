@@ -39,13 +39,15 @@
             color: var(--e-global-color-text);
         }
 
+        /* ===== 每列控制：整列置中 ===== */
         .row {
-            display: grid;
-            justify-content: center;
+            display: flex;
+            gap: 12px;
             align-items: center;
-            grid-template-columns: repeat(2, 120px 52px);
-            column-gap: 14px;
-            row-gap: 12px;
+
+            /* 置中 */
+            justify-content: center;
+
             margin: 12px 0;
         }
 
