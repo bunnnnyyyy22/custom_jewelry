@@ -294,17 +294,23 @@
             a.href = out.toDataURL("image/png");
             a.click();
         }
-
+        const PAID_KEY = "mock_paid";
+        
+        function isMockPaid() {
+          return localStorage.getItem(PAID_KEY) === "1";
+        }
         document.getElementById("downloadBtn").addEventListener("click", () => {
-            if (isFreeMode) {
-                alert("免費體驗僅供預覽，請登入後再下載 PNG！");
-                return;
-            }
-            if (!isLoggedIn()) {
-                alert("請先登入後再下載 PNG！");
-                return;
-            }
-            downloadCurrentCanvasAsPNG({ bg: "#ffffff" });
+          if (!isMockPaid()) {
+            alert("請先訂閱（模擬付款成功）後再下載 PNG！");
+            return;
+          }
+        
+          if (!isLoggedIn()) {
+            alert("請先登入後再下載 PNG！");
+            return;
+          }
+        
+          downloadCurrentCanvasAsPNG({ bg: "#ffffff" });
         });
 
         document.getElementById("backBtn").addEventListener("click", () => {
