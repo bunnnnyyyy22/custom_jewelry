@@ -163,7 +163,11 @@
         const urlParams = new URLSearchParams(window.location.search);
         const pageMode = urlParams.get("mode");
         const isFreeMode = pageMode === "free";
-
+        const PAID_KEY = "mock_paid";
+        
+        function isMockPaid() {
+          return localStorage.getItem(PAID_KEY) === "1";
+        }
         function isLoggedIn() { return !!localStorage.getItem(LS_SESSION_KEY); }
 
         function hexToRgb(hex) {
@@ -294,11 +298,7 @@
             a.href = out.toDataURL("image/png");
             a.click();
         }
-        const PAID_KEY = "mock_paid";
-        
-        function isMockPaid() {
-          return localStorage.getItem(PAID_KEY) === "1";
-        }
+
         document.getElementById("downloadBtn").addEventListener("click", () => {
           if (!isMockPaid()) {
             alert("請先訂閱（模擬付款成功）後再下載 PNG！");
