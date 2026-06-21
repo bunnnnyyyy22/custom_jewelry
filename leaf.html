@@ -172,7 +172,10 @@
             const urlParams = new URLSearchParams(window.location.search);
             const pageMode = urlParams.get("mode"); // 來自 hero：free / 其它
             const isFreeMode = pageMode === "free";
-
+            const PAID_KEY = "mock_paid";
+            function isMockPaid() {
+              return localStorage.getItem(PAID_KEY) === "1";
+            }
             function isLoggedIn() {
                 return !!localStorage.getItem(LS_SESSION_KEY);
             }
@@ -342,10 +345,7 @@
 
                 img.src = url;
             }
-            const PAID_KEY = "mock_paid";
-            function isMockPaid() {
-              return localStorage.getItem(PAID_KEY) === "1";
-            }
+
             document.getElementById("downloadBtn").addEventListener("click", () => {
               alert("download clicked");
               console.log("mock_paid =", localStorage.getItem("mock_paid"));
