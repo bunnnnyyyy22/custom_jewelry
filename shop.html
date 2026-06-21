@@ -208,8 +208,23 @@
 
         <div class="footer-actions">
             <button class="btn-home" type="button" onclick="location.href='./hero.html'">← 返回首頁</button>
+            
+            <button id="mockPayBtn" class="go-btn" type="button" style="margin-top:0;">
+                ✅ 模擬付款成功
+            </button>
         </div>
     </div>
+    <script>
+      const PAID_KEY = "mock_paid";
+    
+      document.getElementById("mockPayBtn")?.addEventListener("click", () => {
+        localStorage.setItem(PAID_KEY, "1");
+        alert("✅ 模擬付款成功！你可以開始下載 PNG");
+      });
+    
+      // 可選：若你想進 shop.html 自動顯示已付款狀態，也可以加這段
+      // if (localStorage.getItem(PAID_KEY) === "1") console.log("mock paid");
+    </script>
 </body>
 
 </html>
