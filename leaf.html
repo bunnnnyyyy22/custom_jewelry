@@ -342,19 +342,32 @@
 
                 img.src = url;
             }
-
+            const PAID_KEY = "mock_paid";
+            function isMockPaid() {
+              return localStorage.getItem(PAID_KEY) === "1";
+            }
             document.getElementById("downloadBtn").addEventListener("click", () => {
-                if (isFreeMode) {
-                    alert("免費體驗僅供預覽，請登入後再下載 PNG！");
-                    return;
-                }
-
-                if (!isLoggedIn()) {
-                    alert("請先登入後再下載 PNG！");
-                    return;
-                }
-
-                downloadCurrentSVGAsPNG({ scale: 2, bg: "#ffffff" });
+              alert("download clicked");
+              console.log("mock_paid =", localStorage.getItem("mock_paid"));
+            
+              // ✅ 重點：免費模式只有在「未 mock 付款」時才擋
+              if (isFreeMode && !isMockPaid()) {
+                alert("免費體驗僅供預覽，請登入後再下載 PNG！");
+                return;
+              }
+            
+              // ✅ 未 mock 付款：擋住
+              if (!isMockPaid()) {
+                alert("請先訂閱（模擬付款成功）後再下載 PNG！");
+                return;
+              }
+            
+              if (!isLoggedIn()) {
+                alert("請先登入後再下載 PNG！");
+                return;
+              }
+            
+              downloadCurrentSVGAsPNG({ scale: 2, bg: "#ffffff" });
             });
 
             // ===== 返回商品選擇按鈕：免費體驗用戶擋掉 =====
