@@ -112,7 +112,6 @@
             background: rgba(172, 112, 50, .08);
         }
 
-        /* ✅ 新增：登出按鈕樣式 */
         .btn-logout {
             background: transparent;
             color: #c0392b;
@@ -149,7 +148,6 @@
         <div class="btn-area">
             <button id="backBtn" type="button" class="btn-secondary">← 返回商品選擇</button>
             <button id="downloadBtn" type="button">下載 PNG</button>
-            <!-- ✅ 新增登出按鈕 -->
             <button id="logoutBtn" type="button" class="btn-logout">登出</button>
         </div>
     </div>
@@ -183,10 +181,16 @@
 
         // ===== 登出函式 =====
         function logout() {
-            localStorage.removeItem(LS_SESSION_KEY); // ✅ 清除登入狀態
-            localStorage.removeItem(PAID_KEY);       // ✅ 清除付款狀態
+            localStorage.removeItem(LS_SESSION_KEY);
+            localStorage.removeItem(PAID_KEY);
             alert("您已成功登出！");
             window.location.href = "hero.html";
+        }
+
+        // ===== 免費模式：隱藏「下載 PNG」和「返回商品選擇」=====
+        if (isFreeMode) {
+            document.getElementById("downloadBtn").style.display = "none";
+            document.getElementById("backBtn").style.display = "none";
         }
 
         // ===== 顏色工具函式 =====
@@ -332,24 +336,18 @@
 
         // ===== 下載按鈕 =====
         document.getElementById("downloadBtn").addEventListener("click", () => {
-            // ✅ 第一步：先確認登入（平台規定一定要登入才能下載）
             if (!isLoggedIn()) {
                 alert("請先登入後再下載 PNG！");
                 return;
             }
-
-            // ✅ 第二步：免費模式 + 未付款 → 擋住
             if (isFreeMode && !isMockPaid()) {
                 alert("免費體驗僅供預覽，請訂閱後再下載 PNG！");
                 return;
             }
-
-            // ✅ 第三步：未付款 → 擋住
             if (!isMockPaid()) {
                 alert("請先訂閱（模擬付款成功）後再下載 PNG！");
                 return;
             }
-
             downloadCurrentSVGAsPNG({ scale: 2, bg: "#ffffff" });
         });
 
