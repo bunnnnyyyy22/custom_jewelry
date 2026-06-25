@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>米珠刺繡飾品客製化平台</title>
+    <title>米珠刺繡客製化平台</title>
 
     <style>
         :root {
@@ -20,7 +20,6 @@
             background: var(--e-global-color-secondary);
             color: var(--e-global-color-text);
             min-height: 100vh;
-
             display: flex;
             justify-content: center;
             align-items: center;
@@ -49,16 +48,20 @@
             line-height: 1.8;
         }
 
+        /* ✅ 修正：按鈕置中、手機自動換行、寬度限制 */
         .btns {
             display: flex;
             justify-content: center;
+            align-items: center;
             gap: 16px;
             flex-wrap: wrap;
             margin-top: 10px;
         }
 
         .btn {
-            min-width: 220px;
+            /* ✅ 修正：min-width 改小，手機不會爆版 */
+            min-width: 140px;
+            width: auto;
             border: none;
             cursor: pointer;
             padding: 14px 22px;
@@ -73,6 +76,19 @@
 
         .btn:active {
             transform: scale(.99);
+        }
+
+        /* ✅ 手機：三顆按鈕各自佔一行，完全置中 */
+        @media (max-width: 520px) {
+            .btns {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 320px;
+            }
         }
 
         /* ===== Modal ===== */
@@ -161,11 +177,18 @@
             box-shadow: 0 0 0 3px rgba(240, 202, 116, .28);
         }
 
+        /* ✅ modal 按鈕區也置中 */
         .modal-actions {
             display: flex;
             gap: 12px;
-            justify-content: flex-end;
+            justify-content: center;
             padding: 0 18px 18px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+            min-width: 0;
+            font-size: 16px;
         }
 
         .btn-secondary {
@@ -175,9 +198,14 @@
             box-shadow: none;
         }
 
+        .btn-secondary:hover {
+            background: rgba(172, 112, 50, .08);
+        }
+
+        /* ✅ 修正：右邊按鈕文字改成 --e-global-color-text */
         .btn-primary {
             background: var(--e-global-color-accent);
-            color: #1f2937;
+            color: var(--e-global-color-text);
             border: none;
         }
     </style>
@@ -185,7 +213,7 @@
 
 <body>
     <div class="wrap">
-        <h1>米珠刺繡飾品客製化平台</h1>
+        <h1>米珠刺繡客製化平台</h1>
         <p>
             免費體驗【葉子🍂】客製化；需要完整體驗流程請登入/註冊。
         </p>
@@ -258,13 +286,12 @@
     </div>
 
     <script>
-        // ======== 前端示範：用 localStorage 當資料庫 ========
         const LS_USERS_KEY = "demo_users_v1";
         const LS_SESSION_KEY = "demo_session_v1";
 
         function loadUsers() {
             const raw = localStorage.getItem(LS_USERS_KEY);
-            return raw ? JSON.parse(raw) : {}; // { account: { name, phone, password, isPaid:0/1 } }
+            return raw ? JSON.parse(raw) : {};
         }
 
         function saveUsers(users) {
@@ -285,7 +312,6 @@
             overlayEl.setAttribute("aria-hidden", "true");
         }
 
-        // ======== 元件 ========
         const btnFree = document.getElementById("btnFree");
         const btnLogin = document.getElementById("btnLogin");
         const btnRegister = document.getElementById("btnRegister");
@@ -293,14 +319,7 @@
         const loginOverlay = document.getElementById("loginOverlay");
         const registerOverlay = document.getElementById("registerOverlay");
 
-        const closeLogin = document.getElementById("closeLogin");
-        const closeRegister = document.getElementById("closeRegister");
-        const cancelLogin = document.getElementById("cancelLogin");
-        const cancelRegister = document.getElementById("cancelRegister");
-
-        // ======== 按鈕行為 ========
         btnFree.addEventListener("click", () => {
-            // 免費體驗直接進葉子
             window.location.href = "./leaf.html?mode=free";
         });
 
@@ -314,92 +333,62 @@
             document.getElementById("regName").focus();
         });
 
-        closeLogin.addEventListener("click", () => closeModal(loginOverlay));
-        cancelLogin.addEventListener("click", () => closeModal(loginOverlay));
-        closeRegister.addEventListener("click", () => closeModal(registerOverlay));
-        cancelRegister.addEventListener("click", () => closeModal(registerOverlay));
+        document.getElementById("closeLogin").addEventListener("click", () => closeModal(loginOverlay));
+        document.getElementById("cancelLogin").addEventListener("click", () => closeModal(loginOverlay));
+        document.getElementById("closeRegister").addEventListener("click", () => closeModal(registerOverlay));
+        document.getElementById("cancelRegister").addEventListener("click", () => closeModal(registerOverlay));
 
-        // 點遮罩關閉（非 modal 本體）
-        loginOverlay.addEventListener("click", (e) => {
-            if (e.target === loginOverlay) closeModal(loginOverlay);
-        });
-        registerOverlay.addEventListener("click", (e) => {
-            if (e.target === registerOverlay) closeModal(registerOverlay);
-        });
+        loginOverlay.addEventListener("click", (e) => { if (e.target === loginOverlay) closeModal(loginOverlay); });
+        registerOverlay.addEventListener("click", (e) => { if (e.target === registerOverlay) closeModal(registerOverlay); });
 
-        // ======== 登入 ========
+        // ===== 登入 =====
         document.getElementById("doLogin").addEventListener("click", () => {
             const account = document.getElementById("loginAccount").value.trim();
             const password = document.getElementById("loginPassword").value;
 
-            if (!account || !password) {
-                alert("請輸入帳號與密碼。");
-                return;
-            }
+            if (!account || !password) { alert("請輸入帳號與密碼。"); return; }
 
             const users = loadUsers();
             const user = users[account];
 
-            if (!user) {
-                alert("找不到此帳號，請確認後再試一次。");
-                return;
-            }
-            if (user.password !== password) {
-                alert("密碼錯誤，請重新輸入。");
-                return;
-            }
+            if (!user) { alert("找不到此帳號，請確認後再試一次。"); return; }
+            if (user.password !== password) { alert("密碼錯誤，請重新輸入。"); return; }
 
             setSession(account);
             closeModal(loginOverlay);
             alert("登入成功！");
-
-            // ✅ 登入後你要導到哪裡？這裡先導到酪梨客製化（可依你的流程改）
             window.location.href = "./shop.html";
         });
 
-        // ======== 註冊 ========
+        // ===== 註冊 =====
         document.getElementById("doRegister").addEventListener("click", () => {
             const name = document.getElementById("regName").value.trim();
             const phone = document.getElementById("regPhone").value.trim();
             const account = document.getElementById("regAccount").value.trim();
             const password = document.getElementById("regPassword").value;
 
-            // 所有欄位都必填
             if (!name || !phone || !account || !password) {
                 alert("所有欄位皆必填（姓名、電話、帳號、密碼）。");
                 return;
             }
 
             const users = loadUsers();
-            if (users[account]) {
-                alert("此帳號已存在，請換一個帳號再試。");
-                return;
-            }
+            if (users[account]) { alert("此帳號已存在，請換一個帳號再試。"); return; }
 
-            // 建立新使用者
-            users[account] = {
-                name,
-                phone,
-                password,
-                isPaid: 0 // 示範：註冊後先未付費
-            };
+            users[account] = { name, phone, password, isPaid: 0 };
             saveUsers(users);
 
             closeModal(registerOverlay);
             alert("註冊成功！請到登入視窗輸入帳號密碼。");
-
-            // 註冊完成後可直接打開登入（比較順）
             btnLogin.click();
         });
 
-        // ESC 關閉 modal（體驗更好）
         window.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 closeModal(loginOverlay);
                 closeModal(registerOverlay);
             }
         });
-
     </script>
 </body>
 
