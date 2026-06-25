@@ -153,6 +153,21 @@
     </div>
 
     <script>
+        (function guardPage() {
+            const LS_SESSION_KEY = "demo_session_v1";
+            const urlParams = new URLSearchParams(window.location.search);
+            const isFreeMode = urlParams.get("mode") === "free";
+
+            // 免費預覽模式：直接放行（只有 leaf 會用到）
+            if (isFreeMode) return;
+
+            // 一般模式：必須登入
+            if (!localStorage.getItem(LS_SESSION_KEY)) {
+                alert("請先登入才能使用此頁面！");
+                window.location.replace("hero.html");
+            }
+        })();
+
         // ===== 常數 =====
         const SVG_URL = "./assets/leaf.svg";
         const PAID_KEY = "mock_paid";
