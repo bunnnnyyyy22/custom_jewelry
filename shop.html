@@ -20,7 +20,6 @@
             color: var(--e-global-color-text);
             font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
             min-height: 100vh;
-
             display: flex;
             justify-content: center;
             align-items: flex-start;
@@ -102,6 +101,14 @@
             max-width: 340px;
         }
 
+        .btn-area {
+            margin-top: 16px;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         .go-btn {
             margin-top: auto;
             border: none;
@@ -120,14 +127,8 @@
             transform: scale(.99);
         }
 
-        /* ===== 底部置中：返回首頁 ===== */
-        .footer-actions {
-            margin-top: 36px;
-            display: flex;
-            justify-content: center;
-        }
-
-        .btn-home {
+        /* ✅ 登出按鈕樣式（取代原本 btn-home） */
+        .btn-logout {
             border: none;
             cursor: pointer;
             padding: 12px 22px;
@@ -135,17 +136,17 @@
             font-weight: 900;
             font-size: 16px;
             background: transparent;
-            color: var(--e-global-color-text);
-            border: 1px solid rgba(172, 112, 50, .4);
+            color: #c0392b;
+            border: 1px solid #c0392b;
             box-shadow: none;
             transition: transform .05s ease, background .15s ease;
         }
 
-        .btn-home:hover {
-            background: rgba(172, 112, 50, .08);
+        .btn-logout:hover {
+            background: rgba(192, 57, 43, 0.08);
         }
 
-        .btn-home:active {
+        .btn-logout:active {
             transform: scale(.99);
         }
     </style>
@@ -159,11 +160,6 @@
             <!-- 葉子 -->
             <div class="card">
                 <div class="icon" aria-hidden="true">
-                    <!-- 你可以把這個 SVG 換成你自己的 leaf 圖示檔（簡化示範） -->
-                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M50 10 C70 25 90 45 85 65 C80 85 55 95 35 85 C15 75 10 50 20 35 C30 20 40 15 50 10Z"
-                            fill="rgba(240,202,116,.9)" stroke="rgba(131,67,0,.9)" stroke-width="2" />
-                    </svg> -->
                     <img src="./assets/leaf.svg" alt="" />
                 </div>
                 <div class="name">葉子</div>
@@ -174,13 +170,6 @@
             <!-- 酪梨 -->
             <div class="card">
                 <div class="icon" aria-hidden="true">
-                    <!-- 同樣：可替換成你自己的 avocado 圖示 SVG -->
-                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M35 45 C25 20 40 12 50 12 C65 12 75 25 70 45
-                     C80 60 75 85 50 88 C25 85 20 60 35 45Z" fill="rgba(140,188,76,.95)" stroke="rgba(131,67,0,.9)"
-                            stroke-width="2" />
-                        <circle cx="57" cy="50" r="7" fill="rgba(240,202,116,.9)" />
-                    </svg> -->
                     <img src="./assets/avocado.svg" alt="" />
                 </div>
                 <div class="name">酪梨</div>
@@ -191,13 +180,6 @@
             <!-- 海星 -->
             <div class="card">
                 <div class="icon" aria-hidden="true">
-                    <!-- 這裡換成你自己的海星圖示 SVG -->
-                    <!--                     <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M50 10 L58 28 L75 22 L66 40 L86 45 L66 50 L75 78 L58 72 L50 90 L42 72 L25 78 L34 50 L14 45 L34 40 L25 22 L42 28 Z"
-                            fill="rgba(240,202,116,.9)" stroke="rgba(131,67,0,.9)" stroke-width="2" />
-                    </svg> -->
-                    <!-- <img src="./assets/starfish.svg" alt="" /> -->
                     <img class="starfish-img" src="./assets/starfish.png" alt="" />
                 </div>
                 <div class="name">海星</div>
@@ -206,24 +188,38 @@
             </div>
         </div>
 
-        <div class="footer-actions">
-            <button class="btn-home" type="button" onclick="location.href='./hero.html'">← 返回首頁</button>
-            
+        <div class="btn-area">
+            <!-- ✅ 返回首頁按鈕已刪除，改成登出按鈕 -->
+            <button id="logoutBtn" class="btn-logout" type="button">登出</button>
             <button id="mockPayBtn" class="go-btn" type="button" style="margin-top:0;">
                 ✅ 模擬付款成功
             </button>
         </div>
     </div>
+
     <script>
-      const PAID_KEY = "mock_paid";
-    
-      document.getElementById("mockPayBtn")?.addEventListener("click", () => {
-        localStorage.setItem(PAID_KEY, "1");
-        alert("✅ 模擬付款成功！你可以開始下載 PNG");
-      });
-    
-      // 可選：若你想進 shop.html 自動顯示已付款狀態，也可以加這段
-      // if (localStorage.getItem(PAID_KEY) === "1") console.log("mock paid");
+        // ===== 常數（統一定義，只定義一次） =====
+        const PAID_KEY = "mock_paid";
+        const LS_SESSION_KEY = "demo_session_v1"; // ✅ 統一用這個 key
+
+        // ===== 模擬付款按鈕 =====
+        document.getElementById("mockPayBtn").addEventListener("click", () => {
+            localStorage.setItem(PAID_KEY, "1");
+            alert("✅ 模擬付款成功！你可以開始下載 PNG");
+        });
+
+        // ===== 登出函式 =====
+        function logout() {
+            localStorage.removeItem(LS_SESSION_KEY); // ✅ 清除登入狀態
+            localStorage.removeItem(PAID_KEY);       // ✅ 清除付款狀態
+            alert("您已成功登出！");
+            window.location.href = "hero.html";
+        }
+
+        // ===== 登出按鈕 =====
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            logout();
+        });
     </script>
 </body>
 
