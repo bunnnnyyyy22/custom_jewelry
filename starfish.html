@@ -160,6 +160,15 @@
     </div>
 
     <script>
+        // ===== ⚠️ 第一道防線：進入頁面時驗證登入 =====
+        (function guardPage() {
+            const LS_SESSION_KEY = "demo_session_v1";
+            if (!localStorage.getItem(LS_SESSION_KEY)) {
+                alert("請先登入才能使用此頁面！");
+                window.location.replace("hero.html");
+            }
+        })();
+
         // ===== 常數（統一定義，只定義一次） =====
         const LAYER_METAL_URL = "./assets/273505.png";
         const LAYER_EMB_URL = "./assets/273506.png";
