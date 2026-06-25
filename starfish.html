@@ -39,15 +39,11 @@
             color: var(--e-global-color-text);
         }
 
-        /* ===== 每列控制：整列置中 ===== */
         .row {
             display: flex;
             gap: 12px;
             align-items: center;
-
-            /* 置中 */
             justify-content: center;
-
             margin: 12px 0;
         }
 
@@ -121,6 +117,18 @@
         .btn-secondary:hover {
             background: rgba(172, 112, 50, .08);
         }
+
+        /* ✅ 登出按鈕樣式 */
+        .btn-logout {
+            background: transparent;
+            color: #c0392b;
+            border: 1px solid #c0392b;
+            box-shadow: none;
+        }
+
+        .btn-logout:hover {
+            background: rgba(192, 57, 43, 0.08);
+        }
     </style>
 </head>
 
@@ -146,30 +154,44 @@
         <div class="btn-area">
             <button id="backBtn" type="button" class="btn-secondary">← 返回商品選擇</button>
             <button id="downloadBtn" type="button">下載 PNG</button>
+            <!-- ✅ 新增登出按鈕 -->
+            <button id="logoutBtn" type="button" class="btn-logout">登出</button>
         </div>
     </div>
 
     <script>
-        // ===== 三層 PNG（依你提供的對應）=====
-        const LAYER_METAL_URL = "./assets/273505.png";     // 金屬層
-        const LAYER_EMB_URL = "./assets/273506.png";       // 刺繡層
-        const LAYER_BEADS_URL = "./assets/273507.png";     // 米珠層
+        // ===== 常數（統一定義，只定義一次） =====
+        const LAYER_METAL_URL = "./assets/273505.png";
+        const LAYER_EMB_URL = "./assets/273506.png";
+        const LAYER_BEADS_URL = "./assets/273507.png";
+        const PAID_KEY = "mock_paid";
+        const LS_SESSION_KEY = "demo_session_v1"; // ✅ 統一用這個 key
 
-        // 如果你希望金屬保持原色不變，把這個改成 false
         const CAN_TINT_METAL = true;
 
-        // ===== 免費體驗 / 登入狀態判斷（照你原本邏輯）=====
-        const LS_SESSION_KEY = "demo_session_v1";
+        // ===== URL 參數 =====
         const urlParams = new URLSearchParams(window.location.search);
         const pageMode = urlParams.get("mode");
         const isFreeMode = pageMode === "free";
-        const PAID_KEY = "mock_paid";
-        
-        function isMockPaid() {
-          return localStorage.getItem(PAID_KEY) === "1";
-        }
-        function isLoggedIn() { return !!localStorage.getItem(LS_SESSION_KEY); }
 
+        // ===== 狀態判斷函式（只定義一次） =====
+        function isLoggedIn() {
+            return !!localStorage.getItem(LS_SESSION_KEY); // ✅ 統一用 LS_SESSION_KEY
+        }
+
+        function isMockPaid() {
+            return localStorage.getItem(PAID_KEY) === "1";
+        }
+
+        // ===== 登出函式 =====
+        function logout() {
+            localStorage.removeItem(LS_SESSION_KEY); // ✅ 清除登入狀態
+            localStorage.removeItem(PAID_KEY);       // ✅ 清除付款狀態
+            alert("您已成功登出！");
+            window.location.href = "hero.html";
+        }
+
+        // ===== 顏色工具函式 =====
         function hexToRgb(hex) {
             const h = hex.replace('#', '').trim();
             const full = h.length === 3 ? h.split('').map(c => c + c).join('') : h;
@@ -177,10 +199,7 @@
             return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
         }
 
-        /**
-         * 亮度比例染色（保留立體明暗）
-         * 前提：你的 PNG 背景是透明 alpha（不要是黑底像素）
-         */
+        // ===== 亮度比例染色（canvas + PNG，絕對不動） =====
         function tintWithLuminance(img, targetHex) {
             const { r: tr, g: tg, b: tb } = hexToRgb(targetHex);
 
@@ -201,7 +220,7 @@
                 if (a === 0) continue;
 
                 const r = data[i], g = data[i + 1], b = data[i + 2];
-                const luminance = 0.299 * r + 0.587 * g + 0.114 * b; // 0~255
+                const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
                 const k = luminance / 255;
 
                 data[i] = Math.round(tr * k);
@@ -213,7 +232,7 @@
             return off;
         }
 
-        // ===== 載入三層 =====
+        // ===== 載入三層（canvas + PNG，絕對不動） =====
         const canvas = document.getElementById("preview");
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -257,7 +276,6 @@
             const embHex = embroideryColorEl.value;
             const beadsHex = beadsColorEl.value;
 
-            // 1) 金屬
             if (CAN_TINT_METAL) {
                 const metalTinted = tintWithLuminance(imgMetal, metalHex);
                 ctx.drawImage(metalTinted, 0, 0, canvas.width, canvas.height);
@@ -265,11 +283,9 @@
                 ctx.drawImage(imgMetal, 0, 0, canvas.width, canvas.height);
             }
 
-            // 2) 刺繡
             const embTinted = tintWithLuminance(imgEmb, embHex);
             ctx.drawImage(embTinted, 0, 0, canvas.width, canvas.height);
 
-            // 3) 米珠
             const beadsTinted = tintWithLuminance(imgBeads, beadsHex);
             ctx.drawImage(beadsTinted, 0, 0, canvas.width, canvas.height);
         }
@@ -279,14 +295,13 @@
             el.addEventListener("input", render);
         });
 
-        // ===== 下載 PNG =====
+        // ===== 下載 PNG（canvas + PNG，絕對不動） =====
         function downloadCurrentCanvasAsPNG({ bg = "#ffffff" } = {}) {
             const out = document.createElement("canvas");
             out.width = canvas.width;
             out.height = canvas.height;
             const octx = out.getContext("2d");
 
-            // 背景（如果你要透明PNG就把 bg 設成 null 或留空並改下面邏輯）
             if (bg !== null && bg !== undefined) {
                 octx.fillStyle = bg;
                 octx.fillRect(0, 0, out.width, out.height);
@@ -299,26 +314,41 @@
             a.click();
         }
 
+        // ===== 下載按鈕 =====
         document.getElementById("downloadBtn").addEventListener("click", () => {
-          if (!isMockPaid()) {
-            alert("請先訂閱（模擬付款成功）後再下載 PNG！");
-            return;
-          }
-        
-          if (!isLoggedIn()) {
-            alert("請先登入後再下載 PNG！");
-            return;
-          }
-        
-          downloadCurrentCanvasAsPNG({ bg: "#ffffff" });
+            // ✅ 第一步：先確認登入
+            if (!isLoggedIn()) {
+                alert("請先登入後再下載 PNG！");
+                return;
+            }
+
+            // ✅ 第二步：免費模式 + 未付款 → 擋住
+            if (isFreeMode && !isMockPaid()) {
+                alert("免費體驗僅供預覽，請訂閱後再下載 PNG！");
+                return;
+            }
+
+            // ✅ 第三步：未付款 → 擋住
+            if (!isMockPaid()) {
+                alert("請先訂閱（模擬付款成功）後再下載 PNG！");
+                return;
+            }
+
+            downloadCurrentCanvasAsPNG({ bg: "#ffffff" });
         });
 
+        // ===== 返回商品選擇按鈕 =====
         document.getElementById("backBtn").addEventListener("click", () => {
             if (isFreeMode) {
                 alert("免費體驗僅開放預覽，請登入後再選擇其他商品！");
                 return;
             }
             window.location.href = "./shop.html";
+        });
+
+        // ===== 登出按鈕 =====
+        document.getElementById("logoutBtn").addEventListener("click", () => {
+            logout();
         });
     </script>
 </body>
